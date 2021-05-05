@@ -692,6 +692,9 @@ namespace UnityEditor
         {
             const int kInterFieldPadding = 2;
 
+            MaterialEditor.BeginProperty(prop1);
+            MaterialEditor.BeginProperty(prop2);
+
             Rect rect = EditorGUILayout.GetControlRect();
             EditorGUI.PrefixLabel(rect, title);
 
@@ -720,6 +723,9 @@ namespace UnityEditor
             EditorGUIUtility.labelWidth = preLabelWidth;
 
             EditorGUI.showMixedValue = false;
+
+            MaterialEditor.EndProperty();
+            MaterialEditor.EndProperty();
         }
 
         public void DoPopup(GUIContent label, MaterialProperty property, string[] options)
@@ -731,6 +737,9 @@ namespace UnityEditor
         // Helper to show texture and color properties
         public static Rect TextureColorProps(MaterialEditor materialEditor, GUIContent label, MaterialProperty textureProp, MaterialProperty colorProp, bool hdr = false)
         {
+            MaterialEditor.BeginProperty(textureProp);
+            MaterialEditor.BeginProperty(colorProp);
+
             Rect rect = EditorGUILayout.GetControlRect();
             EditorGUI.showMixedValue = textureProp.hasMixedValue;
             materialEditor.TexturePropertyMiniThumbnail(rect, textureProp, label.text, label.tooltip);
@@ -754,6 +763,9 @@ namespace UnityEditor
                 }
                 EditorGUI.showMixedValue = false;
             }
+
+            MaterialEditor.EndProperty();
+            MaterialEditor.EndProperty();
 
             return rect;
         }
