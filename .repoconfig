@@ -18,6 +18,7 @@ path-ignore=<<EOT
 ^(
  Tools
  |LocalTestProjects
+ |com\.unity\.template-.*\/Library
  |TestProjects\/.*\/Library
  |TestProjects\/HDRP_DXR_Tests                              # Ideally all test projects would be included, but doing it wone by one is less overwhelming for teams
  |TestProjects\/HDRP_HybridTests                            # So remove the test projects one by one as they are progressively being reformatted
@@ -41,6 +42,7 @@ path=<<EOT
 # general rule
 ^[:a-z0-9./_-]+$                                            # technically ':' not allowed, but let the global rule in format.ini do the more thorough test for c: style abs paths
 # exceptions
+|com\.unity\.template-.*\/Library
 |^com\.unity\.[^\/]*\/\w+~\/[^&]+$                          # allows editor excluded folders, like Documentation~, for core package
 |^com\.unity\.[^\/]*\/Packages\/com\.unity\.[^\/]*\/\w+~\/  # as above but for embedded packages
 |^com\.unity\.[^\/]*\/[^@]+@\d+x\.                          # industry standard for icons with differnet resolution
