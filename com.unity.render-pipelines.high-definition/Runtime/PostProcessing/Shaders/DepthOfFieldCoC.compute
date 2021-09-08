@@ -25,7 +25,7 @@ CBUFFER_END
 #define FarStart        _Params.z
 #define FarEnd          _Params.w
 
-#define FIX_NEAR_BLEND 0
+#define FIX_NEAR_BLEND 1
 #define GROUP_SIZE 8
 
 float GetFixedNearBlend(float linearEyeDepth)

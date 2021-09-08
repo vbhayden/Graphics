@@ -640,6 +640,9 @@ namespace UnityEngine.Rendering.HighDefinition
         public static readonly int _AffectSmoothSurfaces = Shader.PropertyToID("_AffectSmoothSurfaces");
         public static readonly int _ObjectMotionStencilBit = Shader.PropertyToID("_ObjectMotionStencilBit");
 
+        public static readonly int _SSGISampleSaturationModifier    = Shader.PropertyToID("_SSGISampleSaturationModifier");
+        public static readonly int _SSGISampleBrightnessModifier    = Shader.PropertyToID("_SSGISampleBrightnessModifier");
+
         public static readonly int _DenoiseInputArrayTexture = Shader.PropertyToID("_DenoiseInputArrayTexture");
         public static readonly int _ValidityInputArrayTexture = Shader.PropertyToID("_ValidityInputArrayTexture");
         public static readonly int _IntermediateDenoiseOutputTexture = Shader.PropertyToID("_IntermediateDenoiseOutputTexture");

@@ -127,6 +127,9 @@ namespace UnityEngine.Rendering.HighDefinition
             public Vector4 colorPyramidUvScaleAndLimitPrevFrame;
             public int rayMiss;
 
+            public float sampleSaturationModifier;
+            public float sampleBrightnessModifier;
+
             // Compute Shader
             public ComputeShader ssGICS;
             public int traceKernel;
@@ -185,6 +188,9 @@ namespace UnityEngine.Rendering.HighDefinition
                 passData.colorPyramidUvScaleAndLimitPrevFrame = HDUtils.ComputeViewportScaleAndLimit(hdCamera.historyRTHandleProperties.previousViewportSize, hdCamera.historyRTHandleProperties.previousRenderTargetSize);
                 passData.rayMiss = (int)giSettings.rayMiss.value;
 
+                passData.sampleSaturationModifier = giSettings.sampleSaturationModifier.value;
+                passData.sampleBrightnessModifier = giSettings.sampleBrightnessModfier.value;
+
                 // Grab the right kernel
                 passData.ssGICS = asset.renderPipelineResources.shaders.screenSpaceGlobalIlluminationCS;
                 passData.traceKernel = giSettings.fullResolutionSS.value ? m_TraceGlobalIlluminationKernel : m_TraceGlobalIlluminationHalfKernel;
@@ -240,6 +246,9 @@ namespace UnityEngine.Rendering.HighDefinition
                         ctx.cmd.SetComputeIntParam(data.ssGICS, HDShaderIDs._RayMarchingSteps, data.raySteps);
                         ctx.cmd.SetComputeIntParam(data.ssGICS, HDShaderIDs._RayMarchingReflectSky, 1);
                         ctx.cmd.SetComputeIntParam(data.ssGICS, HDShaderIDs._IndirectDiffuseFrameIndex, data.frameIndex);
+                        ctx.cmd.SetComputeFloatParam(data.ssGICS, HDShaderIDs._SSGISampleSaturationModifier, data.sampleSaturationModifier);
+                        ctx.cmd.SetComputeFloatParam(data.ssGICS, HDShaderIDs._SSGISampleBrightnessModifier, data.sampleBrightnessModifier);
+                        
                         // Inject half screen size if required
                         if (!data.fullResolutionSS)
                             ctx.cmd.SetComputeVectorParam(data.ssGICS, HDShaderIDs._HalfScreenSize, data.halfScreenSize);

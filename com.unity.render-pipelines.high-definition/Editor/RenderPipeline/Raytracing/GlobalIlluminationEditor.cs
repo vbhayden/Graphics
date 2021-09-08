@@ -18,6 +18,8 @@ namespace UnityEditor.Rendering.HighDefinition
         SerializedDataParameter m_FullResolutionSS;
         SerializedDataParameter m_DepthBufferThickness;
         SerializedDataParameter m_RaySteps;
+        SerializedDataParameter m_SampleSaturationModifier;
+        SerializedDataParameter m_SampleBrightnessModifier;
 
         // Ray tracing generic attributes
         SerializedDataParameter m_LastBounce;
@@ -64,6 +66,8 @@ namespace UnityEditor.Rendering.HighDefinition
             m_FullResolutionSS = Unpack(o.Find(x => x.fullResolutionSS));
             m_DepthBufferThickness = Unpack(o.Find(x => x.depthBufferThickness));
             m_RaySteps = Unpack(o.Find(x => x.maxRaySteps));
+            m_SampleSaturationModifier = Unpack(o.Find(x => x.sampleSaturationModifier));
+            m_SampleBrightnessModifier = Unpack(o.Find(x => x.sampleBrightnessModfier));
 
             // Ray Tracing shared parameters
             m_LastBounce = Unpack(o.Find(x => x.lastBounceFallbackHierarchy));
@@ -249,6 +253,8 @@ namespace UnityEditor.Rendering.HighDefinition
                     using (new QualityScope(this))
                     {
                         PropertyField(m_RaySteps);
+                        PropertyField(m_SampleSaturationModifier);
+                        PropertyField(m_SampleBrightnessModifier);
                         DenoiserSSGUI();
                     }
                     PropertyField(m_FullResolutionSS, k_FullResolutionSSText);
@@ -280,6 +286,9 @@ namespace UnityEditor.Rendering.HighDefinition
             settings.Save<float>(m_DenoiserRadiusSS);
             settings.Save<bool>(m_SecondDenoiserPassSS);
 
+            settings.Save<float>(m_SampleSaturationModifier);
+            settings.Save<float>(m_SampleBrightnessModifier);
+
             return settings;
         }
 
@@ -306,6 +315,9 @@ namespace UnityEditor.Rendering.HighDefinition
                 settings.TryLoad<bool>(ref m_HalfResolutionDenoiserSS);
                 settings.TryLoad<float>(ref m_DenoiserRadiusSS);
                 settings.TryLoad<bool>(ref m_SecondDenoiserPassSS);
+
+                settings.TryLoad<float>(ref m_SampleSaturationModifier);
+                settings.TryLoad<float>(ref m_SampleBrightnessModifier);
             }
         }
 

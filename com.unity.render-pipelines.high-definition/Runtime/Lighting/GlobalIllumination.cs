@@ -43,6 +43,18 @@ namespace UnityEngine.Rendering.HighDefinition
         /// </summary>
         [Tooltip("Controls the thickness of the depth buffer used for ray marching.")]
         public ClampedFloatParameter depthBufferThickness = new ClampedFloatParameter(0.1f, 0.0f, 0.5f);
+        
+        /// <summary>
+        /// Saturation multiplier applied to raymarched samples. 
+        /// </summary>
+        [Tooltip("Saturation modifier for raymarching samples. 1 for no desaturation, 0 for completely monochrome.")]
+        public ClampedFloatParameter sampleSaturationModifier = new ClampedFloatParameter(1.0f, 0.0f, 1.0f);
+        
+        /// <summary>
+        /// Brightness multiplier applied to raymarched samples. 
+        /// </summary>
+        [Tooltip("Brightness modifier for raymarching samples. 1 neutral, 0 completely black")]
+        public ClampedFloatParameter sampleBrightnessModfier = new ClampedFloatParameter(1.0f, 0.0f, 1.0f);
 
         GlobalIllumination()
         {

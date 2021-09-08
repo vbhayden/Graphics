@@ -469,6 +469,160 @@ void LightEyeTransform(PositionInputs posInput, BSDFData bsdfData, inout float3 
     right = Rotate(float3(0, 0, 0), right, axis, angle);
     up = Rotate(float3(0, 0, 0), up, axis, angle);
 }
+
+#ifdef _USE_CORNEA_CAUSTIC_LUT_HACK
+#include "Assets/Characters/Anne/Materials/Eyes/CausticLUTToEyeHACKResources.hlsl"
+
+float3 CalculateApproximateLightIntensityOnCornea(LightLoopContext lightLoopContext,
+    float3 V, PositionInputs posInput,
+    PreLightData preLightData, LightData lightData,
+    BSDFData bsdfData, BuiltinData builtinData)
+{
+    float3 lighting = 0;
+
+    float3 positionWS = posInput.positionWS;
+
+    #if SHADEROPTIONS_BARN_DOOR
+    // Apply the barn door modification to the light data
+    RectangularLightApplyBarnDoor(lightData, positionWS);
+    #endif
+
+    float3 unL = lightData.positionRWS - positionWS;
+
+    if (dot(lightData.forward, unL) < 0.0001)
+    {
+        // Rotate the light direction into the light space.
+        float3x3 lightToWorld = float3x3(lightData.right, lightData.up, -lightData.forward);
+        unL = mul(unL, transpose(lightToWorld));
+
+        // TODO: This could be precomputed.
+        float halfWidth = lightData.size.x * 0.5;
+        float halfHeight = lightData.size.y * 0.5;
+
+        // Define the dimensions of the attenuation volume.
+        // TODO: This could be precomputed.
+        float range = lightData.range;
+        float3 invHalfDim = rcp(float3(range + halfWidth,
+                                    range + halfHeight,
+                                    range));
+
+        // Compute the light attenuation.
+        # ifdef ELLIPSOIDAL_ATTENUATION
+        // The attenuation volume is an axis-aligned ellipsoid s.t.
+        // r1 = (r + w / 2), r2 = (r + h / 2), r3 = r.
+        float intensity = EllipsoidalDistanceAttenuation(unL, invHalfDim,
+                                                        lightData.rangeAttenuationScale,
+                                                        lightData.rangeAttenuationBias);
+        #else
+        // The attenuation volume is an axis-aligned box s.t.
+        // hX = (r + w / 2), hY = (r + h / 2), hZ = r.
+        float intensity = BoxDistanceAttenuation(unL, invHalfDim,
+                                                    lightData.rangeAttenuationScale,
+                                                    lightData.rangeAttenuationBias);
+        #endif
+
+        // Terminate if the shaded point is too far away.
+        if (intensity != 0.0)
+        {
+            // Translate the light s.t. the shaded point is at the origin of the coordinate system.
+            lightData.positionRWS -= positionWS;
+
+            float4x3 lightVerts;
+
+            // TODO: some of this could be precomputed.
+            lightVerts[0] = lightData.positionRWS + lightData.right * -halfWidth + lightData.up * -halfHeight; // LL
+            lightVerts[1] = lightData.positionRWS + lightData.right * -halfWidth + lightData.up *  halfHeight; // UL
+            lightVerts[2] = lightData.positionRWS + lightData.right *  halfWidth + lightData.up *  halfHeight; // UR
+            lightVerts[3] = lightData.positionRWS + lightData.right *  halfWidth + lightData.up * -halfHeight; // LR
+
+            float3 N = normalize(lightData.positionRWS);
+            float3x3 transformV = GetOrthoBasisViewNormal(V, N, dot(N, V));
+
+            float4x3 lightVertsDiff  = mul(lightVerts, transpose(transformV));
+
+            float3 ltcValue;
+            ltcValue = PolygonIrradiance(lightVerts);
+            
+            if (lightData.cookieMode != COOKIEMODE_NONE)
+            {
+                // Compute the cookie data for the diffuse term
+                float3 formFactorD = PolygonFormFactor(lightVerts);
+                ltcValue *= SampleAreaLightCookie(lightData.cookieScaleOffset, lightVerts, formFactorD);
+            }
+
+            SHADOW_TYPE shadow = EvaluateShadow_RectArea(lightLoopContext, posInput, lightData, builtinData, bsdfData.normalWS, normalize(lightData.positionRWS), length(lightData.positionRWS));
+            float3 lightIntensity = lightData.color.xyz *  lightData.diffuseDimmer * intensity * ComputeShadowColor(shadow, lightData.shadowTint, lightData.penumbraTint);
+   
+            lighting = ltcValue * lightIntensity;
+        }
+    }
+
+    return lighting;
+}
+
+float3 ComputeCausticFromLUT(LightLoopContext lightLoopContext,
+    float3 V, PositionInputs posInput,
+    PreLightData preLightData, LightData lightData,
+    BSDFData bsdfData, BuiltinData builtinData, float3 nonCausticDiffuse)
+{
+    float3 causticDiffuseLighting = CalculateApproximateLightIntensityOnCornea(lightLoopContext, V, posInput, preLightData, lightData, bsdfData, builtinData);
+    float3 lightPosOS = TransformWorldToObject(lightData.positionRWS);
+    float corneaMask = bsdfData.mask.x;
+    {
+        //Sample LUT OS
+        float3 positionOS = _CausticLutIrisPosOS;
+        positionOS.z = _CausticLutcorneaHeightOSZ;
+        
+        float3 lightDirOS = normalize(lightPosOS - positionOS);
+    
+        float2 xAxis = normalize(lightDirOS.xy);
+        float2 yAxis = float2(-xAxis.y, xAxis.x); 
+    
+        float cosTheta = lightDirOS.z;
+        //TODO: this stuff should be shared code with the generation so they don't go out of sync
+        float w = (cosTheta - _CausticLutCosThetaMin) / (1.f - _CausticLutCosThetaMin);
+        float blendToBlack = lerp(1.f, 0.f, saturate(-w * 10.f));
+        w = saturate(1.f - w);
+        float2 uv = (positionOS.xy/_CausticLutCorneaRadius);
+    
+        //orient and map from [-1, 1] -> [0,1]
+        uv = float2(dot(uv, xAxis), dot(uv, yAxis));
+
+        //caustic LUT has potentially mirrored V coordinate
+        if(_CausticMirrorV)
+        {
+            uv.y = abs(uv.y) * 2.f - 1.f;
+        }
+        
+        uv = uv * 0.5f + 0.5f;
+
+        // margin at the U to have space for caustic hilight outside of cornea area
+        uv.x *= 1.f - _CausticLUTScleraUMargin;
+        uv.x += _CausticLUTScleraUMargin;
+    
+        float illuminance = _CausticLutTex.SampleLevel(_CausticLUT_trilinear_clamp_sampler, float3(uv.x, uv.y, w), 0).x;
+
+        float2 bc = (step(0, uv) * step(uv, 1));
+        illuminance *= bc.x * bc.y;
+         
+        //nits -> lumens
+        float lightIntensityInLumens = Luminance(lightData.color.xyz) * lightData.size.x * lightData.size.y * PI;
+        float multiplier = lightIntensityInLumens * _CausticLutlightIntensityMultiplier;
+        
+        illuminance *= multiplier * blendToBlack;
+        causticDiffuseLighting *= lerp(corneaMask, illuminance, _CausticLutBlend);
+        
+    }
+        
+    
+    //for iris the diffuse lighting comes completely from the caustic diffuse, for sclera we just want the potential caustic hilight added, not remove anything
+    float3 finalDiffuse = lerp(nonCausticDiffuse, 0.f, corneaMask);
+    finalDiffuse += causticDiffuseLighting;
+    return finalDiffuse;
+}
+#endif
+
+
 //-----------------------------------------------------------------------------
 // EvaluateBSDF_Directional
 //-----------------------------------------------------------------------------
@@ -557,7 +711,8 @@ DirectLighting EvaluateBSDF_Line(   LightLoopContext lightLoopContext,
 
 DirectLighting EvaluateBSDF_Rect(   LightLoopContext lightLoopContext,
                                     float3 V, PositionInputs posInput,
-                                    PreLightData preLightData, LightData lightData, BSDFData bsdfData, BuiltinData builtinData)
+                                    PreLightData preLightData, LightData lightData,
+                                    BSDFData bsdfData, BuiltinData builtinData)
 {
     DirectLighting lighting;
     ZERO_INITIALIZE(DirectLighting, lighting);
@@ -694,19 +849,40 @@ DirectLighting EvaluateBSDF_Area(LightLoopContext lightLoopContext,
     PreLightData preLightData, LightData lightData,
     BSDFData bsdfData, BuiltinData builtinData)
 {
-    if (HasFlag(bsdfData.materialFeatures, MATERIALFEATUREFLAGS_EYE_CINEMATIC))
-    {
-        LightEyeTransform(posInput, bsdfData, lightData.positionRWS, lightData.forward, lightData.right, lightData.up);
-    }
-
+    //specular
+    DirectLighting dl;
     if (lightData.lightType == GPULIGHTTYPE_TUBE)
     {
-        return EvaluateBSDF_Line(lightLoopContext, V, posInput, preLightData, lightData, bsdfData, builtinData);
+        dl =  EvaluateBSDF_Line(lightLoopContext, V, posInput, preLightData, lightData, bsdfData, builtinData);
     }
     else
     {
-        return EvaluateBSDF_Rect(lightLoopContext, V, posInput, preLightData, lightData, bsdfData, builtinData);
+        dl = EvaluateBSDF_Rect(lightLoopContext, V, posInput, preLightData, lightData, bsdfData, builtinData);
     }
+#ifdef _USE_CORNEA_CAUSTIC_LUT_HACK
+    dl.diffuse = ComputeCausticFromLUT(lightLoopContext, V, posInput, preLightData, lightData, bsdfData, builtinData, dl.diffuse);
+#else
+    //diffuse with refracted light direction (if cinematic eye)
+    if (HasFlag(bsdfData.materialFeatures, MATERIALFEATUREFLAGS_EYE_CINEMATIC))
+    {
+        LightEyeTransform(posInput, bsdfData, lightData.positionRWS, lightData.forward, lightData.right, lightData.up);
+
+        DirectLighting dl2;
+        if (lightData.lightType == GPULIGHTTYPE_TUBE)
+        {
+            dl2 =  EvaluateBSDF_Line(lightLoopContext, V, posInput, preLightData, lightData, bsdfData, builtinData);
+        }
+        else
+        {
+            dl2 = EvaluateBSDF_Rect(lightLoopContext, V, posInput, preLightData, lightData, bsdfData, builtinData);
+        }
+
+        dl.diffuse = lerp(dl.diffuse, dl2.diffuse, bsdfData.mask.x);
+    }
+
+
+#endif
+    return dl;
 }
 
 //-----------------------------------------------------------------------------
