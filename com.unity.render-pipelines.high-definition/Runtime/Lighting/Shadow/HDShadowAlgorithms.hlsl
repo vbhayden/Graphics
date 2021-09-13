@@ -152,7 +152,7 @@ bool CalculatePosTC(HDShadowData sd, float2 texelSize, float3 positionWS, float3
     /* sample the texture */
     // We need to do the check on min/max coordinates because if the shadow spot angle is smaller than the actual cone, then we could have artifacts due to the clamp sampler.
     float2 maxCoord = (sd.shadowMapSize.xy - 0.5f) * texelSize + sd.atlasOffset;
-    float2 minCoord = sd.atlasOffset;
+    float2 minCoord = sd.atlasOffset + 0.5f * texelSize;
     return !any(posTC.xy > maxCoord || posTC.xy < minCoord);
 }
 
