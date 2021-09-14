@@ -46,7 +46,7 @@ platforms:
   - name: OSX
     apis:
       - name: Metal
-    #  - name: OpenGlCore
+      - name: OpenGLCore
     build_configs:
       - name: mono
     color_spaces:
