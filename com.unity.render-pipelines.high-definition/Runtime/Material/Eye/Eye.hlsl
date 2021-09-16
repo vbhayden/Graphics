@@ -480,6 +480,9 @@ float3 CalculateApproximateLightIntensityOnCornea(LightLoopContext lightLoopCont
 {
     float3 lighting = 0;
 
+    //use refracted light position to measure approximate light intensity on the cornea
+    LightEyeTransform(posInput, bsdfData, lightData.positionRWS, lightData.forward, lightData.right, lightData.up);
+
     float3 positionWS = posInput.positionWS;
 
     #if SHADEROPTIONS_BARN_DOOR
@@ -536,9 +539,7 @@ float3 CalculateApproximateLightIntensityOnCornea(LightLoopContext lightLoopCont
             lightVerts[3] = lightData.positionRWS + lightData.right *  halfWidth + lightData.up * -halfHeight; // LR
 
             float3 N = normalize(lightData.positionRWS);
-            float3x3 transformV = GetOrthoBasisViewNormal(V, N, dot(N, V));
-
-            float4x3 lightVertsDiff  = mul(lightVerts, transpose(transformV));
+            float4x3 lightVertsDiff  = mul(lightVerts, transpose(preLightData.orthoBasisViewDiffuseNormal));
 
             float3 ltcValue;
             ltcValue = PolygonIrradiance(lightVerts);
@@ -564,15 +565,17 @@ float3 ComputeCausticFromLUT(LightLoopContext lightLoopContext,
     float3 V, PositionInputs posInput,
     PreLightData preLightData, LightData lightData,
     BSDFData bsdfData, BuiltinData builtinData, float3 nonCausticDiffuse)
-{
+{   
     float3 causticDiffuseLighting = CalculateApproximateLightIntensityOnCornea(lightLoopContext, V, posInput, preLightData, lightData, bsdfData, builtinData);
+
+    float3 positionOS = _CausticLutIrisPosOS;
+    
+    float3 lightPosRWS = lightData.positionRWS;
     float3 lightPosOS = TransformWorldToObject(lightData.positionRWS);
     float corneaMask = bsdfData.mask.x;
+
     {
         //Sample LUT OS
-        float3 positionOS = _CausticLutIrisPosOS;
-        positionOS.z = _CausticLutcorneaHeightOSZ;
-        
         float3 lightDirOS = normalize(lightPosOS - positionOS);
     
         float2 xAxis = normalize(lightDirOS.xy);
@@ -604,10 +607,8 @@ float3 ComputeCausticFromLUT(LightLoopContext lightLoopContext,
 
         float2 bc = (step(0, uv) * step(uv, 1));
         illuminance *= bc.x * bc.y;
-         
-        //nits -> lumens
-        float lightIntensityInLumens = Luminance(lightData.color.xyz) * lightData.size.x * lightData.size.y * PI;
-        float multiplier = lightIntensityInLumens * _CausticLutlightIntensityMultiplier;
+        
+        float multiplier = _CausticLutlightIntensityMultiplier;
         
         illuminance *= multiplier * blendToBlack;
         causticDiffuseLighting *= lerp(corneaMask, illuminance, _CausticLutBlend);
@@ -745,7 +746,7 @@ DirectLighting EvaluateBSDF_Rect(   LightLoopContext lightLoopContext,
                                     range));
 
          // Compute the light attenuation.
-# ifdef ELLIPSOIDAL_ATTENUATION
+#ifdef ELLIPSOIDAL_ATTENUATION
         // The attenuation volume is an axis-aligned ellipsoid s.t.
         // r1 = (r + w / 2), r2 = (r + h / 2), r3 = r.
         float intensity = EllipsoidalDistanceAttenuation(unL, invHalfDim,
