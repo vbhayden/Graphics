@@ -917,7 +917,7 @@ DirectLighting ShadeSurface_Punctual_With_Area_Light_Shadows(LightLoopContext li
 #endif
         {
             // This code works for both surface reflection and thin object transmission.
-            SHADOW_TYPE shadow = EvaluateShadow_RectArea(lightLoopContext, posInput, light, builtinData, GetNormalForShadowBias(bsdfData), L, distances);
+            SHADOW_TYPE shadow = EvaluateShadow_RectArea(lightLoopContext, posInput, light, builtinData, GetNormalForShadowBias(L, bsdfData), L, distances.x);
             lightColor.rgb *= ComputeShadowColor(shadow, light.shadowTint, light.penumbraTint);
 
 #ifdef DEBUG_DISPLAY
