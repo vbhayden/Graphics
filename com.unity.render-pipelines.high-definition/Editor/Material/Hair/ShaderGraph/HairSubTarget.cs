@@ -36,6 +36,12 @@ namespace UnityEditor.Rendering.HighDefinition.ShaderGraph
         protected override bool supportPathtracing => true;
         protected override string pathtracingInclude => CoreIncludes.kHairPathtracing;
 
+        // Only allow advanced scattering for Marschner Strands explicitly set to advanced.
+        private bool useAdvancedMultipleScattering =>
+            hairData.materialType == ShaderGraph.HairData.MaterialType.Marschner &&
+            hairData.geometryType == HairData.GeometryType.Strands &&
+            hairData.scatteringMode == HairData.ScatteringMode.Advanced;
+
         HairData m_HairData;
 
         HairData IRequiresData<HairData>.data
@@ -57,7 +63,7 @@ namespace UnityEditor.Rendering.HighDefinition.ShaderGraph
         public static FieldDescriptor UseLightFacingNormal = new FieldDescriptor(string.Empty, "UseLightFacingNormal", "_USE_LIGHT_FACING_NORMAL 1");
         public static FieldDescriptor Transmittance = new FieldDescriptor(string.Empty, "Transmittance", "_TRANSMITTANCE 1");
         public static FieldDescriptor UseRoughenedAzimuthalScattering = new FieldDescriptor(string.Empty, "UseRoughenedAzimuthalScattering", "_USE_ROUGHENED_AZIMUTHAL_SCATTERING 1");
-        public static FieldDescriptor ScatteringDensityVolume = new FieldDescriptor(string.Empty, "ScatteringDensityVolume", "_USE_DENSITY_VOLUME_SCATTERING 1");
+        public static FieldDescriptor ScatteringAdvanced = new FieldDescriptor(string.Empty, "ScatteringAdvanced", "_USE_ADVANCED_MULTIPLE_SCATTERING 1");
 
         public override void GetFields(ref TargetFieldContext context)
         {
@@ -73,7 +79,7 @@ namespace UnityEditor.Rendering.HighDefinition.ShaderGraph
             context.AddField(UseLightFacingNormal, hairData.geometryType == HairData.GeometryType.Strands);
             context.AddField(Transmittance, descs.Contains(HDBlockFields.SurfaceDescription.Transmittance) && context.pass.validPixelBlocks.Contains(HDBlockFields.SurfaceDescription.Transmittance));
             context.AddField(UseRoughenedAzimuthalScattering, hairData.useRoughenedAzimuthalScattering);
-            context.AddField(ScatteringDensityVolume, hairData.scatteringMode == HairData.ScatteringMode.DensityVolume);
+            context.AddField(ScatteringAdvanced, useAdvancedMultipleScattering);
 
             // Misc
             context.AddField(SpecularAA, lightingData.specularAA &&
@@ -106,6 +112,11 @@ namespace UnityEditor.Rendering.HighDefinition.ShaderGraph
 
                 // TODO: Refraction Index
                 // Right now, the Marschner model implicitly assumes a human hair IOR of 1.55.
+
+                // Dual Scattering Inputs (Global Scattering)
+                // Right now these inputs are provided by the demo team hair package.
+                context.AddBlock(HDBlockFields.SurfaceDescription.StrandCountProbe, useAdvancedMultipleScattering);
+                context.AddBlock(HDBlockFields.SurfaceDescription.SplineShadowBias, useAdvancedMultipleScattering);
             }
         }
 
