@@ -70,6 +70,7 @@
 #define DEBUGVIEW_HAIR_BSDFDATA_ROUGHNESS_TT (1481)
 #define DEBUGVIEW_HAIR_BSDFDATA_ROUGHNESS_TRT (1482)
 #define DEBUGVIEW_HAIR_BSDFDATA_ROUGHNESS_RADIAL (1483)
+#define DEBUGVIEW_HAIR_BSDFDATA_FIBER_COUNT (1484)
 
 // Generated from UnityEngine.Rendering.HighDefinition.Hair+SurfaceData
 // PackingRules = Exact
@@ -130,6 +131,7 @@ struct BSDFData
     float roughnessTT;
     float roughnessTRT;
     float roughnessRadial;
+    float fiberCount;
 };
 
 //
@@ -311,6 +313,9 @@ void GetGeneratedBSDFDataDebug(uint paramId, BSDFData bsdfdata, inout float3 res
             break;
         case DEBUGVIEW_HAIR_BSDFDATA_ROUGHNESS_RADIAL:
             result = bsdfdata.roughnessRadial.xxx;
+            break;
+        case DEBUGVIEW_HAIR_BSDFDATA_FIBER_COUNT:
+            result = bsdfdata.fiberCount.xxx;
             break;
     }
 }
