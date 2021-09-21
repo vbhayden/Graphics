@@ -835,6 +835,8 @@ namespace UnityEngine.Rendering.Universal
             const float kRenderScaleThreshold = 0.05f;
             cameraData.renderScale = (Mathf.Abs(1.0f - settings.renderScale) < kRenderScaleThreshold) ? 1.0f : settings.renderScale;
 
+            cameraData.upscalingMode = SelectUpscalingMode(settings.upscalingMode);
+
 #if ENABLE_VR && ENABLE_XR_MODULE
             cameraData.xr = m_XRSystem.emptyPass;
             XRSystem.UpdateRenderScale(cameraData.renderScale);
@@ -1255,6 +1257,22 @@ namespace UnityEngine.Rendering.Universal
                 cameraData.cameraTargetDescriptor.graphicsFormat = MakeRenderTextureGraphicsFormat(cameraData.isHdrEnabled, true);
                 cameraData.cameraTargetDescriptor.msaaSamples = msaaSamples;
             }
+        }
+
+        /// <summary>
+        /// Returns the closest supported upscaling mode based on the input value
+        /// </summary>
+        /// <param name="desiredMode">Upscaling mode desired by the user</param>
+        /// <returns>Either the original mode provided, or the closest replacement available</returns>
+        static UpscalingMode SelectUpscalingMode(UpscalingMode desiredMode)
+        {
+            UpscalingMode mode = desiredMode;
+
+            // Fall back to point sampling if FSR is not supported on the current platform
+            if ((mode == UpscalingMode.FSR) && !FSRUtils.IsSupported())
+                mode = UpscalingMode.Nearest;
+
+            return mode;
         }
 
 #if ADAPTIVE_PERFORMANCE_2_0_0_OR_NEWER

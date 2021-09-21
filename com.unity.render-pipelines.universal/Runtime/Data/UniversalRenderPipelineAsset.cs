@@ -137,6 +137,17 @@ namespace UnityEngine.Rendering.Universal
         UsePipelineSettings = 2,
     }
 
+    /// <summary>
+    /// Defines the upscaling mode used by the universal render pipeline.
+    /// </summary>
+    public enum UpscalingMode
+    {
+        Linear,
+        Nearest,
+        [InspectorName("FidelityFX Super Resolution")]
+        FSR
+    }
+
     [ExcludeFromPreset]
     public partial class UniversalRenderPipelineAsset : RenderPipelineAsset, ISerializationCallbackReceiver
     {
@@ -166,6 +177,7 @@ namespace UnityEngine.Rendering.Universal
         [SerializeField] bool m_SupportsHDR = true;
         [SerializeField] MsaaQuality m_MSAA = MsaaQuality.Disabled;
         [SerializeField] float m_RenderScale = 1.0f;
+        [SerializeField] UpscalingMode m_UpscalingMode = UpscalingMode.Linear;
         // TODO: Shader Quality Tiers
 
         // Main directional light Settings
@@ -670,6 +682,12 @@ namespace UnityEngine.Rendering.Universal
         {
             get { return m_RenderScale; }
             set { m_RenderScale = ValidateRenderScale(value); }
+        }
+
+        public UpscalingMode upscalingMode
+        {
+            get { return m_UpscalingMode; }
+            set { m_UpscalingMode = value; }
         }
 
         public LightRenderingMode mainLightRenderingMode
