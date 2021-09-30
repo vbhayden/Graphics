@@ -21,6 +21,11 @@ namespace UnityEngine.Rendering.Universal
         /// </summary>
         internal DebugDisplaySettingsLighting LightingSettings { get; private set; }
 
+        /// <summary>
+        /// Volume-related Rendering Debugger settings.
+        /// </summary>
+        internal DebugDisplaySettingsVolume VolumeSettings { get; private set; }
+
         #region IDebugDisplaySettingsQuery
 
         /// <summary>
@@ -94,6 +99,7 @@ namespace UnityEngine.Rendering.Universal
             MaterialSettings = Add(new DebugDisplaySettingsMaterial());
             LightingSettings = Add(new DebugDisplaySettingsLighting());
             RenderingSettings = Add(new DebugDisplaySettingsRendering());
+            VolumeSettings = Add(new DebugDisplaySettingsVolume(new UniversalRenderPipelineVolumeDebugSettings()));
         }
     }
 }

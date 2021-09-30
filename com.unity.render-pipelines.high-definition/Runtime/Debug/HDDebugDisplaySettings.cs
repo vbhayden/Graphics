@@ -1,9 +1,9 @@
 namespace UnityEngine.Rendering.HighDefinition
 {
-    public class HDDebugDisplaySettings : DebugDisplaySettings<HDDebugDisplaySettings>
+    internal class HDDebugDisplaySettings : DebugDisplaySettings<HDDebugDisplaySettings>
     {
         /// <summary>
-        /// Material-related Rendering Debugger settings.
+        /// Volume-related Rendering Debugger settings.
         /// </summary>
         internal DebugDisplaySettingsVolume VolumeSettings { get; private set; }
 
@@ -36,9 +36,8 @@ namespace UnityEngine.Rendering.HighDefinition
 
         public override void Reset()
         {
-            m_Settings.Clear();
-
-            VolumeSettings = Add(new DebugDisplaySettingsVolume());
+            base.Reset();
+            VolumeSettings = Add(new DebugDisplaySettingsVolume(new HDVolumeDebugSettings()));
         }
     }
 }

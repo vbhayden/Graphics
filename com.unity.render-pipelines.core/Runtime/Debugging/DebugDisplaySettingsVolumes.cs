@@ -3,12 +3,24 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace UnityEngine.Rendering.HighDefinition
+namespace UnityEngine.Rendering
 {
-    class DebugDisplaySettingsVolume : IDebugDisplaySettingsData
+    /// <summary>
+    /// Debug Dispaly Settings Volume
+    /// </summary>
+    public class DebugDisplaySettingsVolume : IDebugDisplaySettingsData
     {
         /// <summary>Current volume debug settings.</summary>
-        public VolumeDebugSettings volumeDebugSettings = new VolumeDebugSettings();
+        public IVolumeDebugSettings volumeDebugSettings { get; }
+
+        /// <summary>
+        /// Constructor with the settings
+        /// </summary>
+        /// <param name="volumeDebugSettings"></param>
+        public DebugDisplaySettingsVolume(IVolumeDebugSettings volumeDebugSettings)
+        {
+            this.volumeDebugSettings = volumeDebugSettings;
+        }
 
         internal int volumeComponentEnumIndex;
         internal int volumeCameraEnumIndex;
@@ -41,9 +53,9 @@ namespace UnityEngine.Rendering.HighDefinition
                 var componentNames = new List<GUIContent>() { Styles.none };
                 var componentValues = new List<int>() { componentIndex++ };
 
-                foreach (var type in VolumeDebugSettings.componentTypes)
+                foreach (var type in data.volumeDebugSettings.componentTypes)
                 {
-                    componentNames.Add(new GUIContent() { text = VolumeDebugSettings.ComponentDisplayName(type) });
+                    componentNames.Add(new GUIContent() { text = type.Item1 });
                     componentValues.Add(componentIndex++);
                 }
 
@@ -71,7 +83,7 @@ namespace UnityEngine.Rendering.HighDefinition
                 componentValues.Add(componentIndex++);
 #endif
 
-                foreach (var camera in VolumeDebugSettings.cameras)
+                foreach (var camera in data.volumeDebugSettings.cameras)
                 {
                     componentNames.Add(new GUIContent() { text = camera.name });
                     componentValues.Add(componentIndex++);
@@ -91,7 +103,7 @@ namespace UnityEngine.Rendering.HighDefinition
                 };
             }
 
-            static DebugUI.Widget CreateVolumeParameterWidget(string name, VolumeParameter param)
+            static DebugUI.Widget CreateVolumeParameterWidget(string name, VolumeParameter param, Func<bool> isHiddenCallback = null)
             {
                 if (param == null)
                     return new DebugUI.Value() { displayName = name, getter = () => "-" };
@@ -106,7 +118,8 @@ namespace UnityEngine.Rendering.HighDefinition
                         hdr = p.hdr,
                         showAlpha = p.showAlpha,
                         getter = () => p.value,
-                        setter = _ => { }
+                        setter = _ => { },
+                        isHiddenCallback = isHiddenCallback
                     };
                 }
 
@@ -117,7 +130,8 @@ namespace UnityEngine.Rendering.HighDefinition
                     {
                         displayName = name,
                         getter = () => p.value,
-                        setter = _ => { }
+                        setter = _ => { },
+                        isHiddenCallback = isHiddenCallback
                     };
                 }
 
@@ -142,7 +156,8 @@ namespace UnityEngine.Rendering.HighDefinition
                                 return Strings.none;
                             var valueString = nameProp.GetValue(value);
                             return valueString ?? Strings.none;
-                        }
+                        },
+                        isHiddenCallback = isHiddenCallback
                     };
                 }
 
@@ -154,7 +169,8 @@ namespace UnityEngine.Rendering.HighDefinition
                     {
                         var value = property.GetValue(param);
                         return value == null ? Strings.none : value.ToString();
-                    }
+                    },
+                    isHiddenCallback = isHiddenCallback
                 };
             }
 
@@ -244,16 +260,16 @@ namespace UnityEngine.Rendering.HighDefinition
                         row = new DebugUI.Table.Row()
                         {
                             displayName = fieldName,
-                            children = { CreateVolumeParameterWidget(Strings.interpolatedValue, stackComponent.parameters[currentParam]) }
+                            children = { CreateVolumeParameterWidget(Strings.interpolatedValue, stackComponent.parameters[currentParam]) },
                         };
 
                         foreach (var volume in volumes)
                         {
                             VolumeParameter param = null;
                             var profile = volume.HasInstantiatedProfile() ? volume.profile : volume.sharedProfile;
-                            if (profile.TryGet(selectedType, out VolumeComponent component) && component.parameters[currentParam].overrideState)
+                            if (profile.TryGet(selectedType, out VolumeComponent component))
                                 param = component.parameters[currentParam];
-                            row.children.Add(CreateVolumeParameterWidget(volume.name + " (" + profile.name + ")", param));
+                            row.children.Add(CreateVolumeParameterWidget(volume.name + " (" + profile.name + ")", param, () => !component.parameters[currentParam].overrideState));
                         }
 
                         row.children.Add(CreateVolumeParameterWidget(Strings.defaultValue, inst.parameters[currentParam]));
@@ -291,7 +307,7 @@ namespace UnityEngine.Rendering.HighDefinition
         {
             readonly DebugDisplaySettingsVolume m_Data;
 
-            public override string PanelName => "Volume (WIP)";
+            public override string PanelName => "Volume";
 
             public SettingsPanel(DebugDisplaySettingsVolume data)
             {
