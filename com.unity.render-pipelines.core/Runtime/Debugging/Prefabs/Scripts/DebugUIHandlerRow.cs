@@ -31,13 +31,9 @@ namespace UnityEngine.Rendering.UI
                 m_Timer -= refreshRate;
             m_Timer += Time.deltaTime;
 
-            var firstChildrenTransform = gameObject.transform.GetChild(1);
-            if (firstChildrenTransform.childCount == row.children.Count)
-                Debug.LogError($"Mismatched children count {firstChildrenTransform.childCount} -> {row.children.Count}");
-
             for (int i = 0; i < row.children.Count; i++)
             {
-                var child = firstChildrenTransform.GetChild(i).gameObject;
+                var child = gameObject.transform.GetChild(1).GetChild(i).gameObject;
                 var active = table.GetColumnVisibility(i);
                 child.SetActive(active);
                 if (active && refreshRow)
