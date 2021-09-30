@@ -104,7 +104,9 @@ namespace UnityEngine.Rendering
                 volumes.Add((path, t));
             }
 
-            return volumes;
+            return volumes
+                .OrderBy(i => i.Item1)
+                .ToList();
         }
 
         /// <summary>
