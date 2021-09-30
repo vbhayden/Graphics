@@ -87,8 +87,20 @@ namespace UnityEngine.Rendering
             }
         }
 
+        static List<(string, Type)> s_ComponentTypes;
+
         /// <summary>List of Volume component types.</summary>
-        public List<(string, Type)> componentTypes => VolumeManager.GetSupportedVolumeComponents(targetRenderPipeline);
+        public List<(string, Type)> componentTypes
+        {
+            get
+            {
+                if (s_ComponentTypes == null)
+                {
+                    s_ComponentTypes = VolumeManager.GetSupportedVolumeComponents(targetRenderPipeline);
+                }
+                return s_ComponentTypes;
+            }
+        }
 
         protected static List<T> additionalCameraDatas { get; private set; } = new List<T>();
 
