@@ -214,7 +214,7 @@ Shader "Hidden/HDRP/DebugFullScreen"
                 }
                 if ( _FullScreenDebugMode == FULLSCREENDEBUGMODE_SCREEN_SPACE_SHADOWS)
                 {
-                    float4 color = LOAD_TEXTURE2D_X(_DebugFullScreenTexture, (uint2)input.positionCS.xy);
+                    float4 color = SAMPLE_TEXTURE2D_X(_DebugFullScreenTexture, s_point_clamp_sampler, input.texcoord);
                     return color;
                 }
                 if (_FullScreenDebugMode == FULLSCREENDEBUGMODE_MOTION_VECTORS)
@@ -287,12 +287,12 @@ Shader "Hidden/HDRP/DebugFullScreen"
                 }
                 if (_FullScreenDebugMode == FULLSCREENDEBUGMODE_COLOR_LOG)
                 {
-                    float4 color = LOAD_TEXTURE2D_X(_DebugFullScreenTexture, (uint2)input.positionCS.xy);
+                    float4 color = SAMPLE_TEXTURE2D_X(_DebugFullScreenTexture, s_point_clamp_sampler, input.texcoord);
                     return color;
                 }
                 if (_FullScreenDebugMode == FULLSCREENDEBUGMODE_DEPTH_OF_FIELD_COC)
                 {
-                    float coc = LOAD_TEXTURE2D_X(_DebugFullScreenTexture, (uint2)input.positionCS.xy).x;
+                    float coc = SAMPLE_TEXTURE2D_X(_DebugFullScreenTexture, s_point_clamp_sampler, input.texcoord);
 
                     float3 color = lerp(float3(1.0, 0.0, 0.0), float3(1.0, 1.0, 1.0), saturate(-coc));
                     color = lerp(color, float3(1.0, 1.0, 1.0), saturate(coc));
@@ -305,7 +305,9 @@ Shader "Hidden/HDRP/DebugFullScreen"
                 }
                 if (_FullScreenDebugMode == FULLSCREENDEBUGMODE_CONTACT_SHADOWS)
                 {
-                    uint contactShadowData = LOAD_TEXTURE2D_X(_ContactShadowTexture, (uint2)input.positionCS.xy).r;
+                    int w, h, e, l;
+                    _ContactShadowTexture.GetDimensions(0, w, h, e, l);
+                    uint contactShadowData = LOAD_TEXTURE2D_X(_ContactShadowTexture, (uint2)(input.texcoord.xy * float2(w, h))).r;
 
                     // when the index is -1 we display all contact shadows
                     uint mask = (_DebugContactShadowLightIndex == -1) ? -1 : 1 << _DebugContactShadowLightIndex;
@@ -315,7 +317,9 @@ Shader "Hidden/HDRP/DebugFullScreen"
                 }
                 if (_FullScreenDebugMode == FULLSCREENDEBUGMODE_CONTACT_SHADOWS_FADE)
                 {
-                    uint contactShadowData = LOAD_TEXTURE2D_X(_ContactShadowTexture, (uint2)input.positionCS.xy).r;
+                    int w, h, e, l;
+                    _ContactShadowTexture.GetDimensions(0, w, h, e, l);
+                    uint contactShadowData = LOAD_TEXTURE2D_X(_ContactShadowTexture, (uint2)(input.texcoord.xy * float2(w, h))).r;
                     float fade = float((contactShadowData >> 24)) / 255.0;
 
                     return float4(fade.xxx, 0.0);
@@ -338,7 +342,8 @@ Shader "Hidden/HDRP/DebugFullScreen"
                 {
                     // Reuse depth display function from DebugViewMaterial
                     int2 mipOffset = _DebugDepthPyramidOffsets[_DebugDepthPyramidMip];
-                    uint2 pixCoord = (uint2)input.positionCS.xy >> _DebugDepthPyramidMip;
+                    uint2 remappedPos = (uint2)(input.texcoord.xy * _DebugViewportSize.xy);
+                    uint2 pixCoord = (uint2)remappedPos.xy >> _DebugDepthPyramidMip;
                     float depth = LOAD_TEXTURE2D_X(_CameraDepthTexture, pixCoord + mipOffset).r;
                     PositionInputs posInput = GetPositionInput(input.positionCS.xy, _ScreenSize.zw, depth, UNITY_MATRIX_I_VP, UNITY_MATRIX_V);
 
@@ -371,17 +376,13 @@ Shader "Hidden/HDRP/DebugFullScreen"
                 }
                 if (_FullScreenDebugMode == FULLSCREENDEBUGMODE_QUAD_OVERDRAW)
                 {
-                    uint2 quad = (uint2)input.positionCS.xy & ~1;
-                    uint quad0_idx = _ScreenSize.x * (_ScreenSize.y * SLICE_ARRAY_INDEX + quad.y) + quad.x;
-                    uint quad1_idx = _ScreenSize.x * (_ScreenSize.y * SLICE_ARRAY_INDEX + quad.y) + quad.x + 1;
+                    uint2 samplePosition = (uint2)((input.texcoord / _RTHandleScale.xy) * _DebugViewportSize.xy);
+                    uint2 quad = (uint2)samplePosition.xy & ~1;
+                    uint2 renderScreenSize = (uint2)_DebugViewportSize.xy;
+                    uint quad0_idx = renderScreenSize.x * (renderScreenSize.y * SLICE_ARRAY_INDEX + quad.y) + quad.x;
                     float4 color = (float4)0;
 
                     float quadCost = (float)_FullScreenDebugBuffer[quad0_idx];
-                    if (all(((uint2)input.positionCS.xy & 1) == 0)) // Write only once per quad
-                    {
-                        _FullScreenDebugBuffer[quad0_idx] = 0; // Overdraw
-                        _FullScreenDebugBuffer[quad1_idx] = 0; // Lock
-                    }
                     if ((quadCost > 0.001))
                         color.rgb = HsvToRgb(float3(0.66 * saturate(1.0 - (1.0 / _QuadOverdrawMaxQuadCost) * quadCost), 1.0, 1.0));
 
@@ -389,12 +390,13 @@ Shader "Hidden/HDRP/DebugFullScreen"
                 }
                 if (_FullScreenDebugMode == FULLSCREENDEBUGMODE_VERTEX_DENSITY)
                 {
-                    uint2 quad = (uint2)input.positionCS;
-                    uint quad_idx = _ScreenSize.x * (_ScreenSize.y * SLICE_ARRAY_INDEX + quad.y) + quad.x;
+                    uint2 samplePosition = (uint2)((input.texcoord / _RTHandleScale.xy) * _DebugViewportSize.xy);
+                    uint2 quad = (uint2)samplePosition.xy;
+                    uint2 renderScreenSize = (uint2)_DebugViewportSize.xy;
+                    uint quad_idx = renderScreenSize.x * (renderScreenSize.y * SLICE_ARRAY_INDEX + quad.y) + quad.x;
                     float4 color = (float4)0;
 
                     float density = (float)_FullScreenDebugBuffer[quad_idx];
-                    _FullScreenDebugBuffer[quad_idx] = 0;
                     if ((density > 0.001))
                         color.rgb = HsvToRgb(float3(0.66 * saturate(1.0 - (1.0 / _VertexDensityMaxPixelCost) * density), 1.0, 1.0));
 
