@@ -8,7 +8,7 @@ formatting:
     flavor: b1.small
   commands:
     - "echo -e \"[extensions]\nlargefiles=\n\" > ~/.hgrc"
-    - hg clone -u beta http://hg-mirror-slo.hq.unity3d.com/unity-extra/unity-meta ~/unity-meta
+    - hg clone -u alpha http://hg-mirror-slo.hq.unity3d.com/unity-extra/unity-meta ~/unity-meta
     - perl ~/unity-meta/Tools/Format/format.pl --nobackups .
     - git diff --output ./format.patch
     - cat ./format.patch
@@ -34,7 +34,7 @@ formatting_apply:
     - git checkout $GIT_BRANCH
     - git pull origin $GIT_BRANCH # In case the job was not run on the latest commit, attempt to get it. There may be situations with merge conflicts, in that case wait for everyone to push their changes and then only run the formatting job on HEAD.
     - "echo -e \"[extensions]\nlargefiles=\n\" > ~/.hgrc"
-    - hg clone -u beta http://hg-mirror-slo.hq.unity3d.com/unity-extra/unity-meta ~/unity-meta
+    - hg clone -u alpha http://hg-mirror-slo.hq.unity3d.com/unity-extra/unity-meta ~/unity-meta
     - perl ~/unity-meta/Tools/Format/format.pl --nobackups .
     - git add .
     - git commit -m "Apply formatting changes"
