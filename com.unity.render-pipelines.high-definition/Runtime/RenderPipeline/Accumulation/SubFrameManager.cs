@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Rendering.RenderGraphModule;
 
 #if UNITY_EDITOR
@@ -16,6 +17,7 @@ namespace UnityEngine.Rendering.HighDefinition
         {
             accumulatedWeight = 0.0f;
             currentIteration = 0;
+            denoised = false;
         }
 
         public uint width;
@@ -25,6 +27,7 @@ namespace UnityEngine.Rendering.HighDefinition
 
         public float accumulatedWeight;
         public uint currentIteration;
+        public bool denoised;
     }
 
     // Helper class to manage time-scale in Unity when recording multi-frame sequences where one final frame is an accumulation of multiple sub-frames
@@ -270,6 +273,7 @@ namespace UnityEngine.Rendering.HighDefinition
             public int accumulationKernel;
             public SubFrameManager subFrameManager;
             public bool needExposure;
+            public bool needDenoise;
             public HDCamera hdCamera;
 
             public TextureHandle input;
@@ -277,7 +281,11 @@ namespace UnityEngine.Rendering.HighDefinition
             public TextureHandle history;
         }
 
-        void RenderAccumulation(RenderGraph renderGraph, HDCamera hdCamera, TextureHandle inputTexture, TextureHandle outputTexture, bool needExposure)
+        // for quick prototyping, use a separate DLL
+        [DllImport("DenoiserLibrary.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.StdCall)]
+        static extern int Denoise(IntPtr texturePtr);
+
+        void RenderAccumulation(RenderGraph renderGraph, HDCamera hdCamera, TextureHandle inputTexture, TextureHandle outputTexture, bool needExposure, bool needDenoise = false)
         {
             using (var builder = renderGraph.AddRenderPass<RenderAccumulationPassData>("Render Accumulation", out var passData))
             {
@@ -297,6 +305,7 @@ namespace UnityEngine.Rendering.HighDefinition
                 passData.input = builder.ReadTexture(inputTexture);
                 passData.output = builder.WriteTexture(outputTexture);
                 passData.history = builder.WriteTexture(history);
+                passData.needDenoise = needDenoise;
 
                 builder.SetRenderFunc(
                     (RenderAccumulationPassData data, RenderGraphContext ctx) =>
@@ -314,6 +323,14 @@ namespace UnityEngine.Rendering.HighDefinition
 
                         RTHandle input = data.input;
                         RTHandle output = data.output;
+
+                        if (data.needDenoise)
+                        {
+                            RTHandle history = data.history;
+                            IntPtr nativeTexture = history.rt.GetNativeTexturePtr();
+
+                            Debug.Log($"denoising texture {Denoise(nativeTexture)}");
+                        }
 
                         // Accumulate the path tracing results
                         ctx.cmd.SetComputeIntParam(accumulationShader, HDShaderIDs._AccumulationFrameIndex, (int)camData.currentIteration);
