@@ -37,7 +37,7 @@ namespace UnityEditor.Rendering
             // Not an finite surface
             waterSurface.infinite = false;
 
-            // The max patch size should be smaller 
+            // The max patch size should be smaller
             waterSurface.waterMaxPatchSize = 200.0f;
 
             // The first band's amplitude is quite small
@@ -71,9 +71,9 @@ namespace UnityEditor.Rendering
             waterSurface.infinite = false;
 
             // We only need 2 bands
-            waterSurface.highBandCound = false;
+            waterSurface.highBandCount = false;
 
-            // The max patch size should be smaller 
+            // The max patch size should be smaller
             waterSurface.waterMaxPatchSize = 20.0f;
 
             // The two bands have very little amplitude

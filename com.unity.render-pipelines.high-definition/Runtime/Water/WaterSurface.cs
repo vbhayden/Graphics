@@ -17,7 +17,7 @@ namespace UnityEngine.Rendering.HighDefinition
         public float earthRadius = 6371000.0f;
 
         // Simulation parameters
-        public bool highBandCound = true;
+        public bool highBandCount = true;
         public float waterMaxPatchSize = 500.0f;
         public Vector4 waveAmplitude = Vector4.one;
         public float choppiness = 1.0f;

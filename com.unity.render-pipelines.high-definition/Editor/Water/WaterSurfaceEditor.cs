@@ -14,7 +14,7 @@ namespace UnityEditor.Rendering.HighDefinition
         SerializedProperty m_EarthRadius;
 
         // Simulation parameters
-        SerializedProperty m_HighBandCound;
+        SerializedProperty m_HighBandCount;
         SerializedProperty m_WaterMaxPatchSize;
         SerializedProperty m_WaveAmplitude;
         SerializedProperty m_Choppiness;
@@ -76,7 +76,7 @@ namespace UnityEditor.Rendering.HighDefinition
             m_EarthRadius = o.Find(x => x.earthRadius);
 
             // Band definition parameters
-            m_HighBandCound = o.Find(x => x.highBandCound);
+            m_HighBandCount = o.Find(x => x.highBandCount);
             m_WaterMaxPatchSize = o.Find(x => x.waterMaxPatchSize);
             m_WaveAmplitude = o.Find(x => x.waveAmplitude);
             m_Choppiness = o.Find(x => x.choppiness);
@@ -154,40 +154,46 @@ namespace UnityEditor.Rendering.HighDefinition
             using (new IndentLevelScope())
             {
                 EditorGUILayout.PropertyField(m_Infinite);
-                if (!m_Infinite.boolValue)
+                using (new IndentLevelScope())
                 {
-                    EditorGUILayout.PropertyField(m_GeometryType);
-                    if ((WaterSurface.WaterGeometryType)m_GeometryType.enumValueIndex == WaterSurface.WaterGeometryType.Custom)
-                        EditorGUILayout.PropertyField(m_Geometry);
-                }
-                else
-                {
-                    EditorGUILayout.PropertyField(m_EarthRadius);
-                    m_EarthRadius.floatValue = Mathf.Max(m_EarthRadius.floatValue, 500.0f);
+                    if (!m_Infinite.boolValue)
+                    {
+                        EditorGUILayout.PropertyField(m_GeometryType);
+                        if ((WaterSurface.WaterGeometryType)m_GeometryType.enumValueIndex == WaterSurface.WaterGeometryType.Custom)
+                            EditorGUILayout.PropertyField(m_Geometry);
+                    }
+                    else
+                    {
+                        EditorGUILayout.PropertyField(m_EarthRadius);
+                        m_EarthRadius.floatValue = Mathf.Max(m_EarthRadius.floatValue, 500.0f);
+                    }
                 }
             }
             EditorGUILayout.LabelField("Simulation", EditorStyles.boldLabel);
             using (new IndentLevelScope())
             {
-                EditorGUILayout.PropertyField(m_HighBandCound);
                 EditorGUILayout.PropertyField(m_WaterMaxPatchSize);
                 m_WaterMaxPatchSize.floatValue = Mathf.Clamp(m_WaterMaxPatchSize.floatValue, 5.0f, 10000.0f);
 
-                if (m_HighBandCound.boolValue)
+                EditorGUILayout.PropertyField(m_HighBandCount);
+                using (new IndentLevelScope())
                 {
-                    EditorGUI.BeginChangeCheck();
-                    m_WaveAmplitude.vector4Value = EditorGUILayout.Vector4Field("Amplitude", m_WaveAmplitude.vector4Value);
-                    if (EditorGUI.EndChangeCheck())
-                        SanitizeVector4(m_WaveAmplitude, 0.0f, 1.0f);
-                }
-                else
-                {
-                    EditorGUI.BeginChangeCheck();
-                    Vector2 amplitude2D = new Vector2(m_WaveAmplitude.vector4Value.x, m_WaveAmplitude.vector4Value.y);
-                    amplitude2D = EditorGUILayout.Vector2Field("Amplitude", amplitude2D);
-                    m_WaveAmplitude.vector4Value = new Vector4(amplitude2D.x, amplitude2D.y, m_WaveAmplitude.vector4Value.z, m_WaveAmplitude.vector4Value.w);
-                    if (EditorGUI.EndChangeCheck())
-                        SanitizeVector4(m_WaveAmplitude, 0.0f, 1.0f);
+                    if (m_HighBandCount.boolValue)
+                    {
+                        EditorGUI.BeginChangeCheck();
+                        m_WaveAmplitude.vector4Value = EditorGUILayout.Vector4Field("Amplitude", m_WaveAmplitude.vector4Value);
+                        if (EditorGUI.EndChangeCheck())
+                            SanitizeVector4(m_WaveAmplitude, 0.0f, 1.0f);
+                    }
+                    else
+                    {
+                        EditorGUI.BeginChangeCheck();
+                        Vector2 amplitude2D = new Vector2(m_WaveAmplitude.vector4Value.x, m_WaveAmplitude.vector4Value.y);
+                        amplitude2D = EditorGUILayout.Vector2Field("Amplitude", amplitude2D);
+                        m_WaveAmplitude.vector4Value = new Vector4(amplitude2D.x, amplitude2D.y, m_WaveAmplitude.vector4Value.z, m_WaveAmplitude.vector4Value.w);
+                        if (EditorGUI.EndChangeCheck())
+                            SanitizeVector4(m_WaveAmplitude, 0.0f, 1.0f);
+                    }
                 }
 
                 EditorGUILayout.PropertyField(m_Choppiness);

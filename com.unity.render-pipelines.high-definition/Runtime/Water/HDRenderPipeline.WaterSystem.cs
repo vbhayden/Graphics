@@ -287,7 +287,7 @@ namespace UnityEngine.Rendering.HighDefinition
             cb._BandResolution = (uint)m_WaterBandResolution;
 
             // Maximal possible wave height of the current setup
-            cb._MaxWaveHeight = ComputeMaximumWaveHeight(currentWater.waveAmplitude, currentWater.waterMaxPatchSize, currentWater.windSpeed, currentWater.highBandCound ? k_WaterHighBandCount : k_WaterLowBandCount);
+            cb._MaxWaveHeight = ComputeMaximumWaveHeight(currentWater.waveAmplitude, currentWater.waterMaxPatchSize, currentWater.windSpeed, currentWater.highBandCount ? k_WaterHighBandCount : k_WaterLowBandCount);
 
             // Current simulation time
             cb._SimulationTime = currentWater.simulation.simulationTime;
@@ -398,7 +398,7 @@ namespace UnityEngine.Rendering.HighDefinition
                     ConstantBuffer.Push(cmd, m_ShaderVariablesWater, m_WaterSimulationCS, HDShaderIDs._ShaderVariablesWater);
 
                     // Evaluate the band count
-                    int bandCount = currentWater.highBandCound ? k_WaterHighBandCount : k_WaterLowBandCount;
+                    int bandCount = currentWater.highBandCount ? k_WaterHighBandCount : k_WaterLowBandCount;
 
                     if (!validResources)
                     {
@@ -495,7 +495,7 @@ namespace UnityEngine.Rendering.HighDefinition
             parameters.cameraPosition = hdCamera.camera.transform.position;
             parameters.gridSize = Mathf.Min(settings.gridSize.value, hdCamera.camera.farClipPlane / offsets[settings.numLevelOfDetais.value]);
             parameters.cameraFrustum = hdCamera.frustum;
-            parameters.highBandCount = currentWater.highBandCound;
+            parameters.highBandCount = currentWater.highBandCount;
             parameters.cameraFarPlane = hdCamera.camera.farClipPlane;
 
             parameters.infinite = currentWater.infinite;
