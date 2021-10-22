@@ -147,6 +147,13 @@ namespace UnityEngine.Rendering
 
         private List<MeshRenderer> m_AddedRenderers;
 
+        private IBRGCallbacks m_SRPCallbacks = null;
+
+        public void SetSRPCallbacks(IBRGCallbacks callbacks)
+        {
+            m_SRPCallbacks = callbacks;
+        }
+
         public static T* Malloc<T>(int count) where T : unmanaged
         {
             return (T*)UnsafeUtility.Malloc(
@@ -797,7 +804,73 @@ namespace UnityEngine.Rendering
 
     public class RenderBRG : MonoBehaviour
     {
+        public struct SRPInitParams
+        {
+            public IBRGCallbacks SRPCallbacks;
+        }
+
+        internal static IBRGCallbacks s_SRPCallbacks = null;
+        internal static bool s_IsSRPInitialized = false;
+
+        public static void NotifyCreateSRP(SRPInitParams initParams)
+        {
+            s_SRPCallbacks = initParams.SRPCallbacks;
+            s_IsSRPInitialized = true;
+
+            //any pending scenes enqueued get flushed here.
+            var allBRGs = Object.FindObjectsOfType<RenderBRG>();
+            if (allBRGs != null)
+            {
+                foreach (var o in allBRGs)
+                    o.FlushRequests();
+            }
+        }
+
+        public static void NotifyDestroySRP()
+        {
+            s_SRPCallbacks = null;
+        }
+
         private Dictionary<Scene, SceneBRG> m_Scenes = new();
+
+        private enum RequestType
+        {
+            None,
+            InitializeSceneBRG,
+            DestroySceneBRG
+        }
+
+        private struct Request
+        {
+            public RequestType type;
+            public SceneBRG brg;
+            public List<MeshRenderer> renderers;
+        }
+
+        private Queue<Request> m_BrgRequests = new Queue<Request>();
+
+        private void FlushRequests()
+        {
+            if (!s_IsSRPInitialized || m_BrgRequests.Count == 0)
+                return;
+
+            while (m_BrgRequests.Count > 0)
+            {
+                var req = m_BrgRequests.Dequeue();
+                switch (req.type)
+                {
+                    case RequestType.InitializeSceneBRG:
+                        req.brg.SetSRPCallbacks(s_SRPCallbacks);
+                        req.brg.Initialize(req.renderers);
+                        break;
+                    case RequestType.DestroySceneBRG:
+                    default:
+                        req.brg.Destroy();
+                        break;
+                }
+            }
+            
+        }
 
         private void OnEnable()
         {
@@ -856,7 +929,17 @@ namespace UnityEngine.Rendering
                 GetValidChildRenderers(go, renderers);
 
             SceneBRG brg = new SceneBRG();
-            brg.Initialize(renderers);
+            m_BrgRequests.Enqueue(
+                new Request()
+                {
+                    type = RequestType.InitializeSceneBRG,
+                    brg = brg,
+                    renderers = renderers
+                }
+            );
+
+            FlushRequests();
+
             m_Scenes[scene] = brg;
         }
 
@@ -865,8 +948,17 @@ namespace UnityEngine.Rendering
             m_Scenes.TryGetValue(scene, out var brg);
             if (brg != null)
             {
-                brg.Destroy();
                 m_Scenes.Remove(scene);
+                m_BrgRequests.Enqueue(
+                    new Request()
+                    {
+                        type = RequestType.DestroySceneBRG,
+                        brg = brg,
+                        renderers = null
+                    }
+                );
+
+                FlushRequests();
             }
         }
 
