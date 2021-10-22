@@ -23,7 +23,7 @@ namespace UnityEditor.Rendering.HighDefinition
             m_Enable = Unpack(o.Find(x => x.enable));
             m_GridResolution = Unpack(o.Find(x => x.gridResolution));
             m_GridSize = Unpack(o.Find(x => x.gridSize));
-            m_NumLevelOfDetails = Unpack(o.Find(x => x.numLevelOfDetais));
+            m_NumLevelOfDetails = Unpack(o.Find(x => x.numLevelOfDetails));
             m_AmbientProbeDimmer = Unpack(o.Find(x => x.ambientProbeDimmer));
         }
 

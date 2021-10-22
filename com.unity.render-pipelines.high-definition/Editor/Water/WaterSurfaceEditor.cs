@@ -282,8 +282,11 @@ namespace UnityEditor.Rendering.HighDefinition
                 EditorGUILayout.PropertyField(m_FoamMask);
                 if (m_FoamMask.objectReferenceValue != null)
                 {
-                    EditorGUILayout.PropertyField(m_FoamMaskExtent);
-                    EditorGUILayout.PropertyField(m_FoamMaskOffset);
+                    using (new IndentLevelScope())
+                    {
+                        EditorGUILayout.PropertyField(m_FoamMaskExtent);
+                        EditorGUILayout.PropertyField(m_FoamMaskOffset);
+                    }
                 }
             }
 

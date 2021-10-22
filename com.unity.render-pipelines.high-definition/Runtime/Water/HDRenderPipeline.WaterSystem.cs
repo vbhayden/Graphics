@@ -491,9 +491,9 @@ namespace UnityEngine.Rendering.HighDefinition
             WaterRenderingParameters parameters = new WaterRenderingParameters();
 
             parameters.gridResolution = (int)settings.gridResolution.value;
-            parameters.numLODs = settings.numLevelOfDetais.value;
+            parameters.numLODs = settings.numLevelOfDetails.value;
             parameters.cameraPosition = hdCamera.camera.transform.position;
-            parameters.gridSize = Mathf.Min(settings.gridSize.value, hdCamera.camera.farClipPlane / offsets[settings.numLevelOfDetais.value]);
+            parameters.gridSize = Mathf.Min(settings.gridSize.value, hdCamera.camera.farClipPlane / offsets[settings.numLevelOfDetails.value]);
             parameters.cameraFrustum = hdCamera.frustum;
             parameters.highBandCount = currentWater.highBandCount;
             parameters.cameraFarPlane = hdCamera.camera.farClipPlane;

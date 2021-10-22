@@ -24,12 +24,12 @@ namespace UnityEngine.Rendering.HighDefinition
         public BoolParameter enable = new BoolParameter(false);
         public WaterGridResolutionParameter gridResolution = new WaterGridResolutionParameter(WaterGridResolution.Medium512);
         public MinFloatParameter gridSize = new MinFloatParameter(1000.0f, 100.0f);
-        public ClampedIntParameter numLevelOfDetais = new ClampedIntParameter(2, 1, 4);
+        public ClampedIntParameter numLevelOfDetails = new ClampedIntParameter(2, 1, 4);
         public ClampedFloatParameter ambientProbeDimmer = new ClampedFloatParameter(1.0f, 0.0f, 1.0f);
 
         WaterRendering()
         {
-            displayName = "WaterRendering";
+            displayName = "Water Rendering";
         }
     }
 }
