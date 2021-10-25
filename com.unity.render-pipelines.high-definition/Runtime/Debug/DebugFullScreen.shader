@@ -307,9 +307,8 @@ Shader "Hidden/HDRP/DebugFullScreen"
                 }
                 if (_FullScreenDebugMode == FULLSCREENDEBUGMODE_CONTACT_SHADOWS)
                 {
-                    int w, h, e, l;
-                    _ContactShadowTexture.GetDimensions(0, w, h, e, l);
-                    uint contactShadowData = LOAD_TEXTURE2D_X(_ContactShadowTexture, (uint2)(input.texcoord.xy * float2(w, h))).r;
+                    uint2 samplePosition = (uint2)((input.texcoord.xy / _RTHandleScale.xy) * _DebugViewportSize.xy);
+                    uint contactShadowData = LOAD_TEXTURE2D_X(_ContactShadowTexture, samplePosition).r;
 
                     // when the index is -1 we display all contact shadows
                     uint mask = (_DebugContactShadowLightIndex == -1) ? -1 : 1 << _DebugContactShadowLightIndex;
@@ -319,9 +318,8 @@ Shader "Hidden/HDRP/DebugFullScreen"
                 }
                 if (_FullScreenDebugMode == FULLSCREENDEBUGMODE_CONTACT_SHADOWS_FADE)
                 {
-                    int w, h, e, l;
-                    _ContactShadowTexture.GetDimensions(0, w, h, e, l);
-                    uint contactShadowData = LOAD_TEXTURE2D_X(_ContactShadowTexture, (uint2)(input.texcoord.xy * float2(w, h))).r;
+                    uint2 samplePosition = (uint2)((input.texcoord.xy / _RTHandleScale.xy) * _DebugViewportSize.xy);
+                    uint contactShadowData = LOAD_TEXTURE2D_X(_ContactShadowTexture, samplePosition).r;
                     float fade = float((contactShadowData >> 24)) / 255.0;
 
                     return float4(fade.xxx, 0.0);
