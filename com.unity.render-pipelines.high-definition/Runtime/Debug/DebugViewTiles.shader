@@ -122,7 +122,7 @@ Shader "Hidden/HDRP/DebugViewTiles"
                     variant = -1;
 #endif
 
-                float2 clipCoord = (pixelCoord * _ScreenSize.zw) * 2.0 - 1.0;
+                float2 clipCoord = (pixelCoord * _ClusterDebugLightViewportSize.zw) * 2.0 - 1.0;
                 clipCoord.y *= -1;
 
                 Varyings output;
