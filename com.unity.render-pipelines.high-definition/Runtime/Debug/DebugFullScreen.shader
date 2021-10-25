@@ -59,6 +59,8 @@ Shader "Hidden/HDRP/DebugFullScreen"
                 UNITY_SETUP_INSTANCE_ID(input);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
                 output.positionCS = GetFullScreenTriangleVertexPosition(input.vertexID);
+
+                //Texcoord holds the coordinates of the original rendering before post processing.
                 output.texcoord = GetNormalizedFullScreenTriangleTexCoord(input.vertexID);
                 return output;
             }
