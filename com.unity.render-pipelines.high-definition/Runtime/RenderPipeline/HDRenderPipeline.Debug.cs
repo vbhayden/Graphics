@@ -310,7 +310,7 @@ namespace UnityEngine.Rendering.HighDefinition
                     (FullScreenDebugPassData data, RenderGraphContext ctx) =>
                     {
 
-                        ctx.cmd.SetComputeBufferParam(data.clearBufferCS, data.clearBufferCSKernel, "_FullScreenDebugBuffer", data.debugBuffer);
+                        ctx.cmd.SetComputeBufferParam(data.clearBufferCS, data.clearBufferCSKernel, HDShaderIDs._FullScreenDebugBuffer, data.debugBuffer);
                         ctx.cmd.DispatchCompute(data.clearBufferCS, data.clearBufferCSKernel, (data.numPixels + 63) / 64, 1, 1);
 
                         ctx.cmd.SetRandomWriteTarget(1, data.debugBuffer);
