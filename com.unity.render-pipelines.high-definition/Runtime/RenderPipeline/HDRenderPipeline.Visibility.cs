@@ -13,22 +13,36 @@ namespace UnityEngine.Rendering.HighDefinition
             public HDBRGCallbacks(HDRenderPipeline pipeline)
             {
                 m_HDRenderPipeline = pipeline;
-                m_HDRenderPipeline.m_VisibilityMaterial = CoreUtils.CreateEngineMaterial(m_HDRenderPipeline.defaultResources.shaders.finalPassPS);
+                m_HDRenderPipeline.InitializeVisibilityPass();
             }
 
-            public BRGInternalSRPConfig GetSRPConfig()
-            {
-                return new BRGInternalSRPConfig()
-                {
-                    overrideMaterial = m_HDRenderPipeline.m_VisibilityMaterial
-                };
-            }
+            public BRGInternalSRPConfig GetSRPConfig() => m_HDRenderPipeline.GetBRGSRPConfig();
 
-            public void Dispose()
-            {
-                CoreUtils.Destroy(m_HDRenderPipeline.m_VisibilityMaterial);
-            }
+            public void Dispose() => m_HDRenderPipeline.ShutdownVisibilityPass();
         }
 
+        internal void InitializeVisibilityPass()
+        {
+            m_VisibilityMaterial = CoreUtils.CreateEngineMaterial(defaultResources.shaders.visibilityPS);
+        }
+
+        internal void ShutdownVisibilityPass()
+        {
+            CoreUtils.Destroy(m_VisibilityMaterial);
+            m_VisibilityMaterial = null;
+        }
+
+        internal bool IsVisibilityPassEnabled()
+        {
+            return m_VisibilityMaterial != null;
+        }
+
+        internal BRGInternalSRPConfig GetBRGSRPConfig()
+        {
+            return new BRGInternalSRPConfig()
+            {
+                overrideMaterial = m_VisibilityMaterial
+            };
+        }
     }
 }

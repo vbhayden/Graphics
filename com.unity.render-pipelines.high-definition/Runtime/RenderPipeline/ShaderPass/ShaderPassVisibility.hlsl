@@ -20,9 +20,12 @@ VisibilityVtoP Vert(GeoPoolInput input)
     return v2p;
 }
 
-//TODO tesselation support
 void Frag(VisibilityVtoP packedInput, out float4 outVisibility : SV_Target0)
 {
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(packedInput);
-    outVisibility = float4(1, 0, 0, 0);
+    #ifdef DOTS_INSTANCING_ON
+        outVisibility = float4(0, 0, 1, 0);
+    #else
+        outVisibility = float4(1, 0, 0, 0);
+    #endif
 }
