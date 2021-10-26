@@ -432,6 +432,7 @@ namespace UnityEngine.Rendering.HighDefinition
         public static readonly int _FullScreenDebugDepthRemap = Shader.PropertyToID("_FullScreenDebugDepthRemap");
         public static readonly int _FullScreenDebugBuffer = Shader.PropertyToID("_FullScreenDebugBuffer");
         public static readonly int _TransparencyOverdrawMaxPixelCost = Shader.PropertyToID("_TransparencyOverdrawMaxPixelCost");
+        public static readonly int _QuadOverdrawClearBuffParams = Shader.PropertyToID("_QuadOverdrawClearBuffParams");
         public static readonly int _QuadOverdrawMaxQuadCost = Shader.PropertyToID("_QuadOverdrawMaxQuadCost");
         public static readonly int _VertexDensityMaxPixelCost = Shader.PropertyToID("_VertexDensityMaxPixelCost");
         public static readonly int _MinMotionVector = Shader.PropertyToID("_MinMotionVector");

@@ -7,6 +7,8 @@
 #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Debug/DebugDisplay.cs.hlsl"
 #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Debug/FullScreenDebug.hlsl"
 
+float4 _QuadOverdrawClearBuffParams;
+#define _BufferOffset _QuadOverdrawClearBuffParams.x
 
 [numthreads(64, 1, 1)]
 void clearMain(uint dispatchThreadID : SV_DispatchThreadID)
@@ -15,5 +17,5 @@ void clearMain(uint dispatchThreadID : SV_DispatchThreadID)
     if (dispatchThreadID.x > totalPixels)
         return;
 
-    _FullScreenDebugBuffer[dispatchThreadID.x] = 0.0;
+    _FullScreenDebugBuffer[(int)_BufferOffset + dispatchThreadID.x] = 0.0;
 }
