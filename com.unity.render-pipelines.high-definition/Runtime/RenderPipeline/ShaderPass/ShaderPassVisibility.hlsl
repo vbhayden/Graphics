@@ -1,4 +1,4 @@
-struct GeoPoolInput 
+struct GeoPoolInput
 {
     uint vertId : SV_VertexID;
     UNITY_VERTEX_INPUT_INSTANCE_ID
