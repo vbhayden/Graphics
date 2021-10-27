@@ -35,19 +35,11 @@ Shader "HDRP/Visibility"
 
         Pass
         {
-            Name "Visibility"
-            Tags { "LightMode" = "GBuffer" } // This will be only for opaque object based on the RenderQueue index
+            Name "VBuffer"
+            Tags { "LightMode" = "VBuffer" } // This will be only for opaque object based on the RenderQueue index
 
-            Cull [_CullMode]
-            ZTest [_ZTestGBuffer]
-
-            Stencil
-            {
-                WriteMask [_StencilWriteMaskGBuffer]
-                Ref [_StencilRefGBuffer]
-                Comp Always
-                Pass Replace
-            }
+            Cull [Back]
+            ZTest [Greater]
 
             HLSLPROGRAM
 
@@ -57,6 +49,7 @@ Shader "HDRP/Visibility"
             #pragma instancing_options renderinglayer
             #pragma multi_compile _ DOTS_INSTANCING_ON
 
+            #define VISIBILITY_USE_ORIGINAL_MESH
             #include "Packages/com.unity.render-pipelines.high-definition/Runtime/RenderPipeline/ShaderPass/ShaderPassVisibility.hlsl"
 
             #pragma vertex Vert

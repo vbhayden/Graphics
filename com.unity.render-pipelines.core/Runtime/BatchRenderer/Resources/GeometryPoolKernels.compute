@@ -23,7 +23,7 @@ RWStructuredBuffer<GeoPoolMetadataEntry> _OutputGeoMetadataBuffer;
 [numthreads(GROUP_SIZE_X,1,1)]
 void MainUpdateIndexBuffer32(uint3 dispatchThreadID : SV_DispatchThreadID, int3 groupID : SV_GroupID)
 {
-    if (groupID.x == 0)
+    if (dispatchThreadID.x == 0)
     {
         GeoPoolMetadataEntry entry;
         entry.vertexOffset = _GeoVertexOffset;
@@ -43,7 +43,7 @@ groupshared uint _ldsIndexCache[GROUP_SIZE_X >> 1];
 [numthreads(GROUP_SIZE_X,1,1)]
 void MainUpdateIndexBuffer16(uint3 dispatchThreadID : SV_DispatchThreadID, uint groupIndex : SV_GroupIndex, uint3 groupID : SV_GroupID)
 {
-    if (groupID.x == 0)
+    if (dispatchThreadID.x == 0)
     {
         GeoPoolMetadataEntry entry;
         entry.vertexOffset = _GeoVertexOffset;
@@ -118,7 +118,7 @@ void StoreVertex(
 
     componentOffset = outputBufferSize * GEO_POOL_TANGENT_BYTE_OFFSET;
     if ((vertexFlags & GEOPOOLINPUTFLAGS_HAS_TANGENT) != 0)
-        output.Store2(componentOffset + vertexIndex * GEO_POOL_TANGENT_BYTE_SIZE, asuint(vertex.T));
+        output.Store3(componentOffset + vertexIndex * GEO_POOL_TANGENT_BYTE_SIZE, asuint(vertex.T));
 }
 
 [numthreads(GROUP_SIZE_X, 1, 1)]

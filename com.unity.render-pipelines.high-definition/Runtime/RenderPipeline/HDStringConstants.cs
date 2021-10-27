@@ -14,6 +14,8 @@ namespace UnityEngine.Rendering.HighDefinition
         public static readonly string s_DepthForwardOnlyStr = "DepthForwardOnly";
         /// <summary>Forward Only pass name.</summary>
         public static readonly string s_ForwardOnlyStr = "ForwardOnly";
+        /// <summary>VBuffer pass name.</summary>
+        public static readonly string s_VBufferStr = "VBuffer";
         /// <summary>GBuffer pass name.</summary>
         public static readonly string s_GBufferStr = "GBuffer";
         /// <summary>GBuffer With Prepass pass name.</summary>
@@ -65,6 +67,8 @@ namespace UnityEngine.Rendering.HighDefinition
         public static readonly ShaderTagId s_DepthForwardOnlyName = new ShaderTagId(s_DepthForwardOnlyStr);
         /// <summary>Forward Only shader tag id.</summary>
         public static readonly ShaderTagId s_ForwardOnlyName = new ShaderTagId(s_ForwardOnlyStr);
+        /// <summary>VBuffer shader tag id.</summary>
+        public static readonly ShaderTagId s_VBufferName = new ShaderTagId(s_VBufferStr);
         /// <summary>GBuffer shader tag id.</summary>
         public static readonly ShaderTagId s_GBufferName = new ShaderTagId(s_GBufferStr);
         /// <summary>GBufferWithPrepass shader tag id.</summary>
