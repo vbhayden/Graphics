@@ -937,7 +937,7 @@ namespace UnityEngine.Rendering
 
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
-            if (m_Scenes.TryGetValue(scene, out var _))
+            if (m_Scenes.TryGetValue(scene, out var existingBRG) && existingBRG != null)
                 return;
 
             var renderers = new List<MeshRenderer>();
